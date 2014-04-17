@@ -1,0 +1,7 @@
+Session.vim
+.local.vimrc
+.DS_Store
+*.pyc
+*~
+pip-log*
+*.egg-info/
