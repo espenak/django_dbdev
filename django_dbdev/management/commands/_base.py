@@ -1,4 +1,5 @@
 from optparse import make_option
+from django.db import connections
 from django.core.management.base import BaseCommand
 from django.conf import settings
 
@@ -17,8 +18,11 @@ class BaseDbdevCommand(BaseCommand):
         'django.db.backends.mysql': MySqlBackend
     }
 
-    def init(self, options):
+    def handle(self, *args, **options):
+        self.args = args
         self.options = options
+        self.dbdev_handle()
+
 
     @property
     def dbsettings(self):
@@ -59,10 +63,10 @@ class BaseDbdevCommand(BaseCommand):
     def unsupported_database_engine_exit(self):
         self.stderr.write('Unsupported database engine: {}'.format(self.dbengine))
 
-    def execute_sql(self, sql):
+    def execute_sql(self, sql, params=[]):
         cursor = connections[self.options['database']].cursor()
         try:
-            cursor.execute(sql)
+            cursor.execute(sql, params)
         finally:
             cursor.close()
 

@@ -1,7 +1,6 @@
 from subprocess import check_call
+from django.db.utils import ConnectionHandler
 from django.conf import settings
-
-from .base import BaseDbdevBackend
 
 
 class MySqlBackend(object):
@@ -16,27 +15,44 @@ class MySqlBackend(object):
     def _mysql_executable(self):
         return getattr(settings, 'MYSQL_PATH', 'mysql')
 
-    def execute_sql_using_dbshell(self, user, password, sql):
-        cmd = [
-            self._mysql_executable,
-            '--user={}'.format(user),
-            '--password={}'.format(password),
-            '-e', sql,
-        ]
-        check_call(cmd)
+    def cursor_without_db(self, user=None, password=None):
+        """
+        Get a DB API cursor that is not connected to a database.
+        """
+        dbsettings = {}
+        dbsettings.update(self.command.dbsettings)
+        del dbsettings['NAME'] # When we do not configure a name, the cursor will no connect to a database
 
-    def drop_user(self, adminuser, adminuserpassword):
-        self.execute_sql_using_dbshell(
-            adminuser, adminuserpassword,
-            "DROP USER '{dbuser}'@'localhost';".format(dbuser=self.command.dbuser))
+        if user:
+            dbsettings['USER'] = user
+        if password:
+            dbsettings['PASSWORD'] = password
 
-    def create_user(self, adminuser, adminuserpassword):
-        self.execute_sql_using_dbshell(
-            adminuser, adminuserpassword,
-            ("CREATE USER '{dbuser}'@'localhost' IDENTIFIED BY '{dbpassword}';"
-             "GRANT ALL PRIVILEGES ON *.* TO '{dbuser}'@'localhost';"
-            ).format(
-                dbuser=self.command.dbuser,
-                dbpassword=self.command.dbpassword,
-                dbname=self.command.dbname)
-        )
+        cursor = ConnectionHandler({
+            'django_dbdev': dbsettings
+        })['django_dbdev'].cursor()
+        return cursor
+
+    def drop_user(self, **auth):
+        cursor = self.cursor_without_db(**auth)
+        try:
+            cursor.execute("DROP USER %s@'localhost';", [self.command.dbuser])
+        finally:
+            cursor.close()
+
+    def create_user(self, **auth):
+        cursor = self.cursor_without_db(**auth)
+        try:
+            cursor.execute("CREATE USER %s@'localhost' IDENTIFIED BY %s;",
+                [self.command.dbuser, self.command.dbpassword])
+            cursor.execute("GRANT ALL PRIVILEGES ON *.* TO %s@'localhost';",
+                [self.command.dbuser])
+        finally:
+            cursor.close()
+
+    def create_database(self, dbname):
+        cursor = self.cursor_without_db()
+        try:
+            cursor.execute('CREATE DATABASE {};'.format(dbname)) # NOTE: Using params for dbname does not work for some reason!
+        finally:
+            cursor.close()

@@ -18,8 +18,7 @@ class Command(BaseDbdevCommand):
             help='The password of the --adminuser. Defaults to "secret".'),
     )
 
-    def handle(self, *args, **options):
-        self.init(options)
-        adminuser = options['adminuser']
-        adminuserpassword = options['adminuserpassword']
-        self.dbdev_backend.create_user(adminuser, adminuserpassword)
+    def dbdev_handle(self):
+        adminuser = self.options['adminuser']
+        adminuserpassword = self.options['adminuserpassword']
+        self.dbdev_backend.create_user(user=adminuser, password=adminuserpassword)
