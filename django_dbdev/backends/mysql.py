@@ -11,10 +11,6 @@ class MySqlBackend(object):
     # def _mysqld_executable(self):
     #     return getattr(settings, 'MYSQLD_PATH', 'mysqld')
 
-    @property
-    def _mysql_executable(self):
-        return getattr(settings, 'MYSQL_PATH', 'mysql')
-
     def cursor_without_db(self, user=None, password=None):
         """
         Get a DB API cursor that is not connected to a database.
