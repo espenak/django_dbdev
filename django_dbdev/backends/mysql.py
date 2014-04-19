@@ -11,7 +11,7 @@ class MySqlBackend(object):
     # def _mysqld_executable(self):
     #     return getattr(settings, 'MYSQLD_PATH', 'mysqld')
 
-    def cursor_without_db(self, user=None, password=None):
+    def _cursor_without_db(self, user=None, password=None):
         """
         Get a DB API cursor that is not connected to a database.
         """
@@ -29,15 +29,15 @@ class MySqlBackend(object):
         })['django_dbdev'].cursor()
         return cursor
 
-    def drop_user(self, **auth):
-        cursor = self.cursor_without_db(**auth)
+    def drop_user(self):
+        cursor = self._cursor_without_db()
         try:
             cursor.execute("DROP USER %s@'localhost';", [self.command.dbuser])
         finally:
             cursor.close()
 
-    def create_user(self, **auth):
-        cursor = self.cursor_without_db(**auth)
+    def create_user(self, adminuser, adminuserpassword):
+        cursor = self._cursor_without_db(adminuser, adminuserpassword)
         try:
             cursor.execute("CREATE USER %s@'localhost' IDENTIFIED BY %s;",
                 [self.command.dbuser, self.command.dbpassword])
@@ -47,8 +47,15 @@ class MySqlBackend(object):
             cursor.close()
 
     def create_database(self, dbname):
-        cursor = self.cursor_without_db()
+        cursor = self._cursor_without_db()
         try:
             cursor.execute('CREATE DATABASE {};'.format(dbname)) # NOTE: Using params for dbname does not work for some reason!
+        finally:
+            cursor.close()
+
+    def drop_database(self, dbname):
+        cursor = self._cursor_without_db()
+        try:
+            cursor.execute('DROP DATABASE {};'.format(dbname)) # NOTE: Using params for dbname does not work for some reason!
         finally:
             cursor.close()

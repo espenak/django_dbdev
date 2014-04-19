@@ -1,6 +1,4 @@
 from optparse import make_option
-from django.core.management.base import BaseCommand
-from django.conf import settings
 
 from ._base import BaseDbdevCommand
 
@@ -21,4 +19,4 @@ class Command(BaseDbdevCommand):
     def dbdev_handle(self):
         adminuser = self.options['adminuser']
         adminuserpassword = self.options['adminuserpassword']
-        self.dbdev_backend.create_user(user=adminuser, password=adminuserpassword)
+        self.dbdev_backend.create_user(adminuser=adminuser, adminuserpassword=adminuserpassword)
