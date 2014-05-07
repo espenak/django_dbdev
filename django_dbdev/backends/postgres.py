@@ -1,22 +1,37 @@
 from sh import Command
 from sh import ErrorReturnCode
 import os.path
-from django.db.utils import ConnectionHandler
 from django.conf import settings
 
+from .base import BaseDbdevBackend
 
-class PostgresBackend(object):
+DBSETTINGS = {
+    'ENGINE':'django.db.backends.postgresql_psycopg2',
+    'PORT': 20021,
+    'USER': 'dbdev',
+    'PASSWORD': 'dbdev',
+    'HOST': '127.0.0.1',
+}
+
+
+class PostgresBackend(BaseDbdevBackend):
+
     def __init__(self, command):
         self.command = command
         postgres_executable = getattr(settings, 'DBDEV_POSTGRES_EXECUTABLE', 'postgres')
         pg_ctl_executable = getattr(settings, 'DBDEV_PG_CTL_EXECUTABLE', 'pg_ctl')
+        environ = {
+            'PGPORT': str(DBSETTINGS['PORT'])
+        }
         self.postgres = Command(postgres_executable).bake(
             _out=self.command.stdout,
             _err=self.command.stderr,
+            _env=environ,
             _out_bufsize=1)
         self.pg_ctl = Command(pg_ctl_executable).bake(
-            '-l', self._server_logfile,
-            '-D', self.command.datadir,
+            l=self._server_logfile,
+            D=self.command.datadir,
+            _env=environ,
             _out=self.command.stdout,
             _err=self.command.stderr,
             _out_bufsize=1)
@@ -26,19 +41,11 @@ class PostgresBackend(object):
         """
         Get a DB API cursor that is not connected to a database.
         """
-        dbsettings = {}
-        dbsettings.update(self.command.dbsettings)
-        del dbsettings['NAME'] # When we do not configure a name, the cursor will not connect to a database
-
-        if user:
-            dbsettings['USER'] = user
-        if password:
-            dbsettings['PASSWORD'] = password
-
-        cursor = ConnectionHandler({
-            'django_dbdev': dbsettings
-        })['django_dbdev'].cursor()
-        return cursor
+        import psycopg2
+        user = user or self.command.dbuser
+        password = password or self.command.dbpassword
+        connection = psycopg2.connect(user=user, password=password)
+        return connection.cursor()
 
     def drop_user(self):
         cursor = self._cursor_without_db()
@@ -60,7 +67,7 @@ class PostgresBackend(object):
     def create_database(self, dbname):
         cursor = self._cursor_without_db()
         try:
-            cursor.execute('CREATE DATABASE {};'.format(dbname)) # NOTE: Using params for dbname does not work for some reason!
+            cursor.execute('CREATE DATABASE %s;', dbname)
         finally:
             cursor.close()
 

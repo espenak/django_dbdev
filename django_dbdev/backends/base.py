@@ -1,3 +1,6 @@
+from django.db.utils import ConnectionHandler
+
+
 
 class BaseDbdevBackend(object):
     def drop_user(self):
