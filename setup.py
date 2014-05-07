@@ -13,7 +13,8 @@ setup(
     long_description='See https://github.com/espenak/django_dbdev',
     packages=find_packages(exclude=[]),
     install_requires = [
-        'Django'
+        'Django',
+        'sh'
     ],
     include_package_data=True,
     zip_safe=False,
