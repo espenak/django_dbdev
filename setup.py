@@ -11,7 +11,7 @@ setup(
     url = 'http://github.com/espenak/django_dbdev',
     author = 'Espen Angell Kristiansen',
     long_description='See https://github.com/espenak/django_dbdev',
-    packages=find_packages(exclude=[]),
+    packages=find_packages(exclude=['dbdev_testproject']),
     install_requires = [
         'Django',
         'sh'
