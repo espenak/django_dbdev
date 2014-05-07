@@ -30,6 +30,7 @@ Help
    gettingstarted
    usage
    settings
+   develop
 
 
 
