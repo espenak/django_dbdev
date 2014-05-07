@@ -1,5 +1,6 @@
 import os
 import os.path
+from shutil import rmtree
 from optparse import make_option
 from django.db import connections
 from django.core.management.base import BaseCommand
@@ -35,6 +36,9 @@ class BaseDbdevCommand(BaseCommand):
         if not os.path.exists(self.datadir):
             os.makedirs(self.datadir)
 
+    def remove_datadir(self):
+        rmtree(self.datadir)
+
 
     @property
     def datadir(self):
@@ -43,8 +47,7 @@ class BaseDbdevCommand(BaseCommand):
 
         The directory is created if it does not exist.
         """
-        path = os.path.join(self.root_datadir_path,
-            '{}-{}'.format(self.dbengine, self.dbname))
+        path = os.path.join(self.root_datadir_path, self.dbengine)
         return path
 
     @property
@@ -54,34 +57,6 @@ class BaseDbdevCommand(BaseCommand):
     @property
     def dbengine(self):
         return self.dbsettings['ENGINE']
-
-    @property
-    def dbuser(self):
-        return self.dbsettings['USER']
-
-    @property
-    def dbpassword(self):
-        return self.dbsettings['PASSWORD']
-
-    @property
-    def dbname(self):
-        return self.dbsettings.get('NAME', None)
-
-    # @property
-    # def dbport(self):
-    #     return self.dbsettings.get('PORT', None)
-
-    # @property
-    # def dbhost(self):
-    #     return self.dbsettings.get('HOST', None)
-
-    # @property
-    # def is_mysql(self):
-    #     return self.dbengine == 'django.db.backends.mysql'
-
-    # @property
-    # def is_postgresql(self):
-    #     return self.dbengine == 'django.db.backends.postgresql_psycopg2'
 
     def unsupported_database_engine_exit(self):
         self.stderr.write('Unsupported django_dbdev database engine: {}'.format(self.dbengine))
