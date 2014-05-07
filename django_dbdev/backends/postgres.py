@@ -38,13 +38,14 @@ class PostgresBackend(BaseDbdevBackend):
             D=self.command.datadir,
             **common_command_kwargs)
         self.psql = Command(psql_executable).bake(**common_command_kwargs)
-        self.createdb = Command(createdb_executable).bake(**common_command_kwargs)
+        self.createdb = Command(createdb_executable).bake(
+            '-e', **common_command_kwargs)
 
     def _create_user(self):
-        self.psql('postgres', c="CREATE ROLE {USER} WITH PASSWORD '{PASSWORD}' SUPERUSER LOGIN;".format(**DBSETTINGS))
+        self.psql('postgres', '-e', c="CREATE ROLE {USER} WITH PASSWORD '{PASSWORD}' SUPERUSER LOGIN;".format(**DBSETTINGS))
 
     def _create_database(self):
-        self.createdb('{NAME} OWNER {USER}'.format(**DBSETTINGS))
+        self.createdb(DBSETTINGS['NAME'], owner=DBSETTINGS['USER'])
 
     def init(self):
         if os.path.exists(self.command.datadir):
@@ -80,8 +81,6 @@ class PostgresBackend(BaseDbdevBackend):
             self.command.stdout.write('Successfully stopped the Postgres server and removed "{}".'.format(
                 self.command.datadir))
 
-
-
     # def _server_is_running(self):
         # return os.path.exists(os.path.join(self.command.datadir, 'postmaster.pid'))
 
@@ -99,7 +98,6 @@ class PostgresBackend(BaseDbdevBackend):
             except ErrorReturnCode:
                 p.kill()
 
-
     def start_database_server(self):
         self.pg_ctl('start')
 
@@ -111,3 +109,6 @@ class PostgresBackend(BaseDbdevBackend):
             self._stop_database_server()
         except ErrorReturnCode:
             pass # The error message from postgres is shown to the user, so no more is needed from us
+
+    def load_dbdump(self, dumpfile):
+        self.psql(DBSETTINGS['NAME'], f=dumpfile)

@@ -6,10 +6,30 @@
 Welcome to django_dbdev's documentation!
 ========================================
 
-Contents:
+``django_dbdev`` is a set of Django management commands that makes it very easy work with database servers during development.
+
+We provide Django management commands to:
+- Setup a clean and isolated database environment in a temporary folder. This means that you do not have to touch ANY globally installed database configs or databases.
+- Create and destroy this isolated database enviroment, including all those hard to remember commands to create the database, create a user with the correct privileges etc.
+- Load database dumps.
+- Backup and restore your database.
+
+
+Supported databases
+===================
+- PostgreSQL
+- MySQL
+
+
+Help
+====
 
 .. toctree::
    :maxdepth: 2
+
+   gettingstarted
+   usage
+   settings
 
 
 
