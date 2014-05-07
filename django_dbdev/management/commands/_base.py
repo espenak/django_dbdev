@@ -1,9 +1,12 @@
+import os
+import os.path
 from optparse import make_option
 from django.db import connections
 from django.core.management.base import BaseCommand
 from django.conf import settings
 
 from django_dbdev.backends.mysql import MySqlBackend
+from django_dbdev.backends.postgres import PostgresBackend
 
 
 class BaseDbdevCommand(BaseCommand):
@@ -15,7 +18,8 @@ class BaseDbdevCommand(BaseCommand):
         )
 
     backends = {
-        'django.db.backends.mysql': MySqlBackend
+        'django.db.backends.mysql': MySqlBackend,
+        'django.db.backends.postgresql_psycopg2': PostgresBackend,
     }
 
     def handle(self, *args, **options):
@@ -23,6 +27,25 @@ class BaseDbdevCommand(BaseCommand):
         self.options = options
         self.dbdev_handle()
 
+    @property
+    def root_datadir_path(self):
+        return getattr(settings, 'DBDEV_DATADIR', 'dbdev_tempdata')
+
+    def create_datadir_if_not_exists(self):
+        if not os.path.exists(self.datadir):
+            os.makedirs(self.datadir)
+
+
+    @property
+    def datadir(self):
+        """
+        Get the path to the temporary data directory for this database.
+
+        The directory is created if it does not exist.
+        """
+        path = os.path.join(self.root_datadir_path,
+            '{}-{}'.format(self.dbengine, self.dbname))
+        return path
 
     @property
     def dbsettings(self):
@@ -61,7 +84,8 @@ class BaseDbdevCommand(BaseCommand):
     #     return self.dbengine == 'django.db.backends.postgresql_psycopg2'
 
     def unsupported_database_engine_exit(self):
-        self.stderr.write('Unsupported database engine: {}'.format(self.dbengine))
+        self.stderr.write('Unsupported django_dbdev database engine: {}'.format(self.dbengine))
+        raise SystemExit()
 
     def execute_sql(self, sql, params=[]):
         cursor = connections[self.options['database']].cursor()
