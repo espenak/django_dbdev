@@ -124,3 +124,4 @@ class PostgresBackend(BaseDbdevBackend):
     def restore(self, directory):
         backupfile = os.path.join(directory, 'backup.sql')
         self.load_dbdump(backupfile)
+
