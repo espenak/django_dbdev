@@ -19,6 +19,9 @@ class BaseDbdevBackend(object):
     #####################################################
     #
     # The API each backend needs to implement.
+    # In addition to these methods, a backend must also:
+    # - Add a DBSETTINGS dict to the backend module
+    #   (see the other backends).
     #
     #####################################################
 
@@ -82,12 +85,6 @@ class BaseDbdevBackend(object):
         raise NotImplementedError()
 
 
-    #####################################################
-    #
-    # Helper methods
-    #
-    #####################################################
-
     def guide(self):
         """
         Print useful database specific commands and tips for the user.
@@ -101,7 +98,8 @@ class BaseDbdevBackend(object):
         The default expects the backend to create a Django template
         named ``django_dbdev/<backend-class-name-lowercased>.rst``.
         The template gets the backend class as ``backend`` context
-        variable, and the 
+        variable, and the ``dbsettings`` context variable contains
+        ``<backendmodule>.DBSETTINGS``.
 
         Use the ReStructuredText format for the text.
         """
@@ -109,6 +107,13 @@ class BaseDbdevBackend(object):
             'backend': self,
             'dbsettings': importlib.import_module(self.__class__.__module__).DBSETTINGS
         })
+
+
+    #####################################################
+    #
+    # Helper methods
+    #
+    #####################################################
 
 
     @property
