@@ -26,6 +26,8 @@ Supported databases
 - MySQL
 - MariaDB (same backend as MySQL)
 
+You can also easily :doc:`add support for more databases <custom_backend>`.
+
 
 Help
 ====
@@ -36,6 +38,7 @@ Help
    gettingstarted
    usage
    settings
+   custom_backend
    develop
 
 

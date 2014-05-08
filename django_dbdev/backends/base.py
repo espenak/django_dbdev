@@ -6,12 +6,13 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 class BaseDbdevBackend(object):
+    """
+    Abstract base class for dbdev backends.
+    """
 
     def __init__(self, command):
         """
-        :param command:
-            A Django management command class. Will always be a
-            subclass of ``django_dbdev.management.commands._base.BaseDbdevCommand``.
+        :param command: A Django management command class. Will always be a subclass of ``django_dbdev.management.commands._base.BaseDbdevCommand``.
         """
         self.command = command
 
