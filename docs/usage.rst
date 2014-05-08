@@ -21,6 +21,13 @@ After running this, you should be able to initialize the database using ``syncdb
     simply set the ``DBDEV_DATADIR``-setting (in your settings.py) to
     something else.
 
+.. note::
+
+    If ``dbdev_init`` fails, read the output to determine what went wrong.
+    Then run ``debdev_destroy`` (explained below) to remove everything that
+    ``dbdev_init`` created before you try again.
+
+
 
 *******************************************
 Destroy or re-init the database environment

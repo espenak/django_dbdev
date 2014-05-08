@@ -18,7 +18,7 @@ DBSETTINGS = {
 class PostgresBackend(BaseDbdevBackend):
 
     def __init__(self, command):
-        self.command = command
+        super(PostgresBackend, self).__init__(command)
         postgres_executable = getattr(settings, 'DBDEV_POSTGRES_EXECUTABLE', 'postgres')
         pg_ctl_executable = getattr(settings, 'DBDEV_POSTGRES_PG_CTL_EXECUTABLE', 'pg_ctl')
         psql_executable = getattr(settings, 'DBDEV_POSTGRES_PSQL_EXECUTABLE', 'psql')
@@ -27,15 +27,15 @@ class PostgresBackend(BaseDbdevBackend):
             'PGPORT': str(DBSETTINGS['PORT'])
         }
         common_command_kwargs = dict(
-            _out=self.command.stdout,
-            _err=self.command.stderr,
+            _out=self.stdout,
+            _err=self.stderr,
             _env=environ,
             _out_bufsize=1)
         self.postgres = Command(postgres_executable).bake(**common_command_kwargs)
         self.pg_ctl = Command(pg_ctl_executable).bake(
             '-w',
             l=self._server_logfile,
-            D=self.command.datadir,
+            D=self.datadir,
             **common_command_kwargs)
         self.psql = Command(psql_executable).bake(**common_command_kwargs)
         self.createdb = Command(createdb_executable).bake(
@@ -48,48 +48,48 @@ class PostgresBackend(BaseDbdevBackend):
         self.createdb(DBSETTINGS['NAME'], owner=DBSETTINGS['USER'])
 
     def init(self):
-        if os.path.exists(self.command.datadir):
-            self.command.stderr.write('The data directory ({}) already exists.'.format(self.command.datadir))
+        if os.path.exists(self.datadir):
+            self.stderr.write('The data directory ({}) already exists.'.format(self.datadir))
             raise SystemExit()
         else:
-            self.command.create_datadir_if_not_exists()
-            self.pg_ctl('init', '-D', self.command.datadir)
+            self.create_datadir_if_not_exists()
+            self.pg_ctl('init', '-D', self.datadir)
             self.start_database_server()
             self._create_user()
             self._create_database()
 
-            self.command.stdout.write('')
-            self.command.stdout.write('='*70)
-            self.command.stdout.write('')
-            self.command.stdout.write('Successfully:')
-            self.command.stdout.write('- Initialized postgres in "{}".'.format(self.command.datadir))
-            self.command.stdout.write('- Created the "{USER}"-role with password'.format(**DBSETTINGS))
-            self.command.stdout.write('  "{PASSWORD}" and superuser previleges'.format(**DBSETTINGS))
-            self.command.stdout.write('- Created an empty database named "{NAME}".'.format(**DBSETTINGS))
-            self.command.stdout.write('')
-            self.command.stdout.write('The postgres server is running on port {PORT}.'.format(**DBSETTINGS))
-            self.command.stdout.write('You can stop it with:')
-            self.command.stdout.write('')
-            self.command.stdout.write('  $ python manage.py dbdev_stopserver')
-            self.command.stdout.write('')
-            self.command.stdout.write('='*70)
+            self.stdout.write('')
+            self.stdout.write('='*70)
+            self.stdout.write('')
+            self.stdout.write('Successfully:')
+            self.stdout.write('- Initialized postgres in "{}".'.format(self.datadir))
+            self.stdout.write('- Created the "{USER}"-role with password'.format(**DBSETTINGS))
+            self.stdout.write('  "{PASSWORD}" and superuser previleges'.format(**DBSETTINGS))
+            self.stdout.write('- Created an empty database named "{NAME}".'.format(**DBSETTINGS))
+            self.stdout.write('')
+            self.stdout.write('The postgres server is running on port {PORT}.'.format(**DBSETTINGS))
+            self.stdout.write('You can stop it with:')
+            self.stdout.write('')
+            self.stdout.write('  $ python manage.py dbdev_stopserver')
+            self.stdout.write('')
+            self.stdout.write('='*70)
 
     def destroy(self):
         self.stop_database_server()
-        if os.path.exists(self.command.datadir):
-            self.command.remove_datadir()
-            self.command.stdout.write('Successfully stopped the Postgres server and removed "{}".'.format(
-                self.command.datadir))
+        if os.path.exists(self.datadir):
+            self.remove_datadir()
+            self.stdout.write('Successfully stopped the Postgres server and removed "{}".'.format(
+                self.datadir))
 
     # def _server_is_running(self):
-        # return os.path.exists(os.path.join(self.command.datadir, 'postmaster.pid'))
+        # return os.path.exists(os.path.join(self.datadir, 'postmaster.pid'))
 
     @property
     def _server_logfile(self):
-        return os.path.join(self.command.datadir, 'serverlog.log')
+        return os.path.join(self.datadir, 'serverlog.log')
 
     def run_database_server_in_foreground(self):
-        p = self.postgres('-D', self.command.datadir, _bg=True)
+        p = self.postgres('-D', self.datadir, _bg=True)
         try:
             p.wait()
         except KeyboardInterrupt:
@@ -112,3 +112,6 @@ class PostgresBackend(BaseDbdevBackend):
 
     def load_dbdump(self, dumpfile):
         self.psql(DBSETTINGS['NAME'], f=dumpfile)
+
+    def backup(self):
+        self.get_backupname()

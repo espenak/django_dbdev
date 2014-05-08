@@ -1,6 +1,3 @@
-import os
-import os.path
-from shutil import rmtree
 from optparse import make_option
 from django.db import connections
 from django.core.management.base import BaseCommand
@@ -27,28 +24,6 @@ class BaseDbdevCommand(BaseCommand):
         self.args = args
         self.options = options
         self.dbdev_handle()
-
-    @property
-    def root_datadir_path(self):
-        return getattr(settings, 'DBDEV_DATADIR', 'dbdev_tempdata')
-
-    def create_datadir_if_not_exists(self):
-        if not os.path.exists(self.datadir):
-            os.makedirs(self.datadir)
-
-    def remove_datadir(self):
-        rmtree(self.datadir)
-
-
-    @property
-    def datadir(self):
-        """
-        Get the path to the temporary data directory for this database.
-
-        The directory is created if it does not exist.
-        """
-        path = os.path.join(self.root_datadir_path, self.dbengine)
-        return path
 
     @property
     def dbsettings(self):
