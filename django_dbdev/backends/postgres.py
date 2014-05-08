@@ -24,6 +24,7 @@ class PostgresBackend(BaseDbdevBackend):
         psql_executable = getattr(settings, 'DBDEV_POSTGRES_PSQL_EXECUTABLE', 'psql')
         createdb_executable = getattr(settings, 'DBDEV_POSTGRES_CREATEDB_EXECUTABLE', 'createdb')
         pg_dump_executable = getattr(settings, 'DBDEV_POSTGRES_PG_DUMP_EXECUTABLE', 'pg_dump')
+        self.serverlogfile = os.path.join(self.datadir, 'serverlog.log')
         environ = {
             'PGPORT': str(DBSETTINGS['PORT'])
         }
@@ -32,16 +33,23 @@ class PostgresBackend(BaseDbdevBackend):
             _err=self.stderr,
             _env=environ,
             _out_bufsize=1)
-        self.postgres = Command(postgres_executable).bake(**common_command_kwargs)
+        self.postgres = Command(postgres_executable).bake(
+            p=DBSETTINGS['PORT'],
+            **common_command_kwargs)
         self.pg_ctl = Command(pg_ctl_executable).bake(
             '-w',
             l=self._server_logfile,
             D=self.datadir,
             **common_command_kwargs)
-        self.psql = Command(psql_executable).bake(**common_command_kwargs)
+        self.psql = Command(psql_executable).bake(
+            p=DBSETTINGS['PORT'],
+            **common_command_kwargs)
         self.createdb = Command(createdb_executable).bake(
-            '-e', **common_command_kwargs)
+            '-e',
+            p=DBSETTINGS['PORT'],
+            **common_command_kwargs)
         self.pg_dump = Command(pg_dump_executable).bake(
+            p=DBSETTINGS['PORT'],
             dbname=DBSETTINGS['NAME'],
             **common_command_kwargs)
 
@@ -75,6 +83,10 @@ class PostgresBackend(BaseDbdevBackend):
             self.stdout.write('You can stop it with:')
             self.stdout.write('')
             self.stdout.write('  $ python manage.py dbdev_stopserver')
+            self.stdout.write('')
+            self.stdout.write('And you can shutdown and destroy the entire setup using:')
+            self.stdout.write('')
+            self.stdout.write('  $ python manage.py dbdev_destroy')
             self.stdout.write('')
             self.stdout.write('='*70)
 
@@ -125,3 +137,8 @@ class PostgresBackend(BaseDbdevBackend):
         backupfile = os.path.join(directory, 'backup.sql')
         self.load_dbdump(backupfile)
 
+    def serverinfo(self):
+        try:
+            self.pg_ctl.status()
+        except ErrorReturnCode:
+            pass

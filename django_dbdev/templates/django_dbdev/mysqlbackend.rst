@@ -1,4 +1,3 @@
-
 Debug server errors
 ===================
 - The error log is in {{backend.errorlogfile}}.
@@ -27,7 +26,7 @@ Connect to the shell without selecting a database::
 
 Load a database dump (just like the dbdev_loaddump management command)::
 
-    $ {{backend.mysql}} < mydump.sql
+    $ {{backend.mysql}} {{ dbsettings.NAME }} < mydump.sql
 
 
 Work with mysqld
