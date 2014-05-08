@@ -1,8 +1,9 @@
 from datetime import datetime
 import os
+import importlib
 from shutil import rmtree
 from django.conf import settings
-
+from django.template.loader import render_to_string
 
 class BaseDbdevBackend(object):
 
@@ -72,6 +73,13 @@ class BaseDbdevBackend(object):
         """
         raise NotImplementedError()
 
+    def serverinfo(self):
+        """
+        Print information about the server.
+
+        Must at least tell if the server is running or not.
+        """
+        raise NotImplementedError()
 
 
     #####################################################
@@ -79,6 +87,29 @@ class BaseDbdevBackend(object):
     # Helper methods
     #
     #####################################################
+
+    def guide(self):
+        """
+        Print useful database specific commands and tips for the user.
+
+        Examples should include all the needed login info.
+
+        The idea is to avoid having to lookup those commonly needed
+        database-specific management and connection commands that
+        is needed from time to time.
+
+        The default expects the backend to create a Django template
+        named ``django_dbdev/<backend-class-name-lowercased>.rst``.
+        The template gets the backend class as ``backend`` context
+        variable, and the 
+
+        Use the ReStructuredText format for the text.
+        """
+        return render_to_string('django_dbdev/{}.rst'.format(self.__class__.__name__.lower()), {
+            'backend': self,
+            'dbsettings': importlib.import_module(self.__class__.__module__).DBSETTINGS
+        })
+
 
     @property
     def datadir(self):

@@ -1,3 +1,5 @@
+from cStringIO import StringIO
+from time import sleep
 import os
 from sh import Command
 from sh import ErrorReturnCode
@@ -23,6 +25,9 @@ class MySqlBackend(BaseDbdevBackend):
             'mysql_install_db')
         mysqld_executable = getattr(settings, 'DBDEV_MYSQLD_EXECUTABLE', 'mysqld_safe')
         mysqladmin_executable = getattr(settings, 'DBDEV_MYSQLADMIN_EXECUTABLE', 'mysqladmin')
+        mysql_executable = getattr(settings, 'DBDEV_MYSQL_EXECUTABLE', 'mysql')
+        mysqldump_executable = getattr(settings, 'DBDEV_MYSQLDUMP_EXECUTABLE', 'mysqldump')
+        self.errorlogfile = os.path.join(self.datadir, 'servererror.log')
         self.common_command_kwargs = dict(
             _out=self.stdout,
             _err=self.stderr,
@@ -30,6 +35,7 @@ class MySqlBackend(BaseDbdevBackend):
         self.mysqld = Command(mysqld_executable).bake(
             datadir=os.path.abspath(self.datadir),
             port=DBSETTINGS['PORT'],
+            log_error=os.path.abspath(self.errorlogfile),
             **self.common_command_kwargs)
         self.mysqladmin = Command(mysqladmin_executable).bake(
             port=DBSETTINGS['PORT'],
@@ -39,6 +45,16 @@ class MySqlBackend(BaseDbdevBackend):
         self.mysqladmin_nopassword = Command(mysqladmin_executable).bake(
             port=DBSETTINGS['PORT'],
             user=DBSETTINGS['USER'],
+            **self.common_command_kwargs)
+        self.mysql = Command(mysql_executable).bake(
+            port=DBSETTINGS['PORT'],
+            user=DBSETTINGS['USER'],
+            password=DBSETTINGS['PASSWORD'],
+            **self.common_command_kwargs)
+        self.mysqldump = Command(mysqldump_executable).bake(
+            port=DBSETTINGS['PORT'],
+            user=DBSETTINGS['USER'],
+            password=DBSETTINGS['PASSWORD'],
             **self.common_command_kwargs)
 
         self.mysql_basedir = os.environ.get('DBDEV_MYSQL_BASEDIR',
@@ -50,42 +66,72 @@ class MySqlBackend(BaseDbdevBackend):
             datadir=os.path.abspath(self.datadir),
             **mysql_install_db_kwargs)
 
-    def mysqlserver(self, *args):
-        mysqlserver_executable = getattr(settings, 'DBDEV_MYSQLSERVER_EXECUTABLE', 'mysql.server')
-        allargs = list(args) + [
-            '--datadir', os.path.abspath(self.datadir),
-            # '--pidfile', os.path.abspath(os.path.join(self.datadir, 'pidfile.pid'))
-        ]
-        if self.mysql_basedir:
-            allargs.append('--basedir')
-            allargs.append(self.mysql_basedir)
 
-        # NOTE: Does not work because we have no way of setting the port.
-        mysqlserver = Command(mysqlserver_executable).bake(*allargs,
-            _out=self.stdout,
-            _err=self.stderr,
-            _out_bufsize=0)
-        self.stdout.write('Running: {}'.format(mysqlserver))
-        return mysqlserver()
+    def _server_is_running(self, nopassword=False):
+        output = StringIO()
+        def process_output(line):
+            output.write(line)
+        try:
+            if nopassword:
+                p = self.mysqladmin_nopassword('ping', _out=process_output, _err=process_output)
+            else:
+                p = self.mysqladmin('ping', _out=process_output, _err=process_output)
+            p.wait()
+        except ErrorReturnCode:
+            pass
+        return 'mysqld is alive' in output.getvalue()
         
+    def _wait_for_serverstart(self, nopassword=False):
+        self.stdout.write('Waiting for MySQL server to start...')
+        while not self._server_is_running(nopassword):
+            self.stdout.write('... MySQL server not running. Re-pinging in 0.3s.')
+            sleep(0.3)
+        self.stdout.write('MySQL server is running.')
 
-    def start_database_server(self):
-        self.mysqlserver('start')
+    def start_database_server(self, nopassword=False):
+        if self._server_is_running(nopassword):
+            self.stderr.write('MySQL server is already running.')
+        else:
+            self.mysqld(_bg=True)
+            self._wait_for_serverstart(nopassword)
+
+    def run_database_server_in_foreground(self):
+        p = self.mysqld(_bg=True)
+        try:
+            p.wait()
+        except KeyboardInterrupt:
+            try:
+                self._stop_database_server()
+            except ErrorReturnCode:
+                p.kill()
+
 
     def _stop_database_server(self):
-        self.mysqlserver('stop')
+        try:
+            self.mysqladmin('shutdown')
+        except ErrorReturnCode:
+            self.stderr.write('Failed to stop MySQL server using:')
+            self.stderr.write('   $ {} shutdown'.format(self.mysqladmin))
+            self.stderr.write('Trying without password in case we have been left in a state where the root password was never set.')
+            self.mysqladmin_nopassword('shutdown')
+            self.stdout.write('Shutting down without password worked!')
+        else:
+            self.stdout.write('MySQL server was stopped.')
 
     def stop_database_server(self):
         try:
             self._stop_database_server()
         except ErrorReturnCode:
-            pass # The error message from mysqladmin is shown to the user, so no more is needed from us
+            pass
 
     def _set_password_for_rootuser(self):
+        self.stdout.write('Setting MySQL server password for the root user to: "{PASSWORD}".'.format(
+            **DBSETTINGS))
         self.mysqladmin_nopassword('password', DBSETTINGS['PASSWORD'])
 
     def _create_database(self):
-        self.mysqladmin_nopassword('create', DBSETTINGS['NAME'])
+        self.stdout.write('Creating the "{NAME}"-database.'.format(**DBSETTINGS))
+        self.mysqladmin('create', DBSETTINGS['NAME'])
 
     def init(self):
         if os.path.exists(self.datadir):
@@ -94,29 +140,53 @@ class MySqlBackend(BaseDbdevBackend):
         else:
             self.create_datadir_if_not_exists()
             self.mysql_install_db()
-            self.start_database_server()
+            self.start_database_server(nopassword=True)
             self._set_password_for_rootuser()
             self._create_database()
 
-            # self.stdout.write('')
-            # self.stdout.write('='*70)
-            # self.stdout.write('')
-            # self.stdout.write('Successfully:')
-            # self.stdout.write('- Initialized postgres in "{}".'.format(self.datadir))
-            # self.stdout.write('- Created the "{USER}"-role with password'.format(**DBSETTINGS))
-            # self.stdout.write('  "{PASSWORD}" and superuser previleges'.format(**DBSETTINGS))
-            # self.stdout.write('- Created an empty database named "{NAME}".'.format(**DBSETTINGS))
-            # self.stdout.write('')
-            # self.stdout.write('The postgres server is running on port {PORT}.'.format(**DBSETTINGS))
-            # self.stdout.write('You can stop it with:')
-            # self.stdout.write('')
-            # self.stdout.write('  $ python manage.py dbdev_stopserver')
-            # self.stdout.write('')
-            # self.stdout.write('='*70)
+            self.stdout.write('')
+            self.stdout.write('='*70)
+            self.stdout.write('')
+            self.stdout.write('Successfully:')
+            self.stdout.write('- Initialized MySQL in "{}".'.format(self.datadir))
+            self.stdout.write('- Created the "{USER}"-role with "{PASSWORD}" '.format(**DBSETTINGS))
+            self.stdout.write('  as password and all previleges.')
+            self.stdout.write('- Created an empty database named "{NAME}".'.format(**DBSETTINGS))
+            self.stdout.write('')
+            self.stdout.write('The MySQL server is running on port {PORT}.'.format(**DBSETTINGS))
+            self.stdout.write('You can stop it with:')
+            self.stdout.write('')
+            self.stdout.write('  $ python manage.py dbdev_stopserver')
+            self.stdout.write('')
+            self.stdout.write('And you can shutdown and destroy the entire setup using:')
+            self.stdout.write('')
+            self.stdout.write('  $ python manage.py dbdev_destroy')
+            self.stdout.write('')
+            self.stdout.write('='*70)
 
     def destroy(self):
-        # self.stop_database_server()
+        self.stop_database_server()
         if os.path.exists(self.datadir):
             self.remove_datadir()
             self.stdout.write('Successfully stopped the MySQL server and removed "{}".'.format(
                 self.datadir))
+
+    def serverinfo(self):
+        if self._server_is_running():
+            self.mysqladmin('ping')
+            self.mysqladmin('status')
+        else:
+            self.stdout.write('Server is not running.')
+
+    def load_dbdump(self, dumpfile):
+        with open(dumpfile, 'rb') as f:
+            self.mysql(DBSETTINGS['NAME'], _in=f)
+
+    def backup(self, directory):
+        backupfile = os.path.join(directory, 'backup.sql')
+        with open(backupfile, 'wb') as f:
+            self.mysqldump(DBSETTINGS['NAME'], _out=f)
+
+    def restore(self, directory):
+        backupfile = os.path.join(directory, 'backup.sql')
+        self.load_dbdump(backupfile)
