@@ -42,10 +42,15 @@ Add the following to your Django settings::
 .. note::
 
     If you use the mariadb or mysql packages for homebrew on OSX, you
-    must also set ``DBDEV_MYSQL_BASEDIR`` as an environent variable or
-    Django setting. For mariadb it will look something like this::
+    must also set :obj:`~django.conf.settings.DBDEV_MYSQL_BASEDIR` as
+    an environent variable or Django setting. We recommend using an
+    environment variable to avoid affecting other developers on the
+    same project, and because it allows you to fix it for all your
+    Django projects.
 
-        DBDEV_MYSQL_BASEDIR=export DBDEV_MYSQL_BASEDIR=/usr/local/Cellar/mariadb/10.0.10/
+    For mariadb it will look something like this::
+
+        export DBDEV_MYSQL_BASEDIR=/usr/local/Cellar/mariadb/10.0.10/
 
     The version number will vary. For mysql the only difference will be
     the name of the directory (mysql instead of mariadb).

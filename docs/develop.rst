@@ -58,3 +58,8 @@ Submit a patch
 #. Fork the `GitHub repository <https://github.com/espenak/django_dbdev>`_.
 #. If you are making a major change, you should create an issue where you explain the change and the motivation. This will make it far less likely that the patch will be rejected.
 #. When the patch is ready, send a pull request to ``espenak``.
+
+
+.. _PIP: https://pip.pypa.io
+.. _VirtualEnv: https://virtualenv.pypa.io
+.. _virtualenvwrapper: http://virtualenvwrapper.readthedocs.org/
