@@ -7,3 +7,4 @@ pip-log*
 *.egg-info/
 docs/_build/
 dbdev_testproject/dbdev_tempdata/
+dist/
