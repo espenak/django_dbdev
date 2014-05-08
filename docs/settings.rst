@@ -55,3 +55,43 @@ Posgres backend settings
 
     Path to the ``pg_dump`` executable.
     Defaults to ``pg_dump``.
+
+
+**********************
+MySQL backend settings
+**********************
+
+.. data:: DBDEV_MYSQL_INSTALL_DB_EXECUTABLE
+
+    Path to the ``mysql_install_db`` executable.
+    Defaults to ``mysql_install_db``.
+
+.. data:: DBDEV_MYSQLD_EXECUTABLE
+
+    Path to the ``mysqld_safe`` executable.
+    Defaults to ``mysqld_safe``.
+
+.. data:: DBDEV_MYSQLADMIN_EXECUTABLE
+
+    Path to the ``mysqladmin`` executable.
+    Defaults to ``mysqladmin``.
+
+.. data:: DBDEV_MYSQL_EXECUTABLE
+
+    Path to the ``mysql`` executable.
+    Defaults to ``mysql``.
+
+.. data:: DBDEV_MYSQLDUMP_EXECUTABLE
+
+    Path to the ``mysqldump`` executable.
+    Defaults to ``mysqldump``.
+
+.. data:: DBDEV_MYSQL_BASEDIR
+
+    The path to the mysql *basedir* (where mysql default data is installed).
+    You may have to set this if your MySQL/MariaDB is not configured correctly.
+
+    Can also be set as an environment variable, which is probably a better
+    choice for projects with more than one developer.
+
+    Defaults to ``None``.

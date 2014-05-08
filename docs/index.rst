@@ -24,6 +24,7 @@ Supported databases
 ===================
 - PostgreSQL
 - MySQL
+- MariaDB (same backend as MySQL)
 
 
 Help

@@ -39,8 +39,22 @@ Add the following to your Django settings::
     }
 
 
+.. note::
+
+    If you use the mariadb or mysql packages for homebrew on OSX, you
+    must also set ``DBDEV_MYSQL_BASEDIR`` as an environent variable or
+    Django setting. For mariadb it will look something like this::
+
+        DBDEV_MYSQL_BASEDIR=export DBDEV_MYSQL_BASEDIR=/usr/local/Cellar/mariadb/10.0.10/
+
+    The version number will vary. For mysql the only difference will be
+    the name of the directory (mysql instead of mariadb).
+
+
 
 *****************************************
 Developing for multiple database backends
 *****************************************
-TODO
+The ``dbdev_testproject`` explained in :doc:`develop` in an example of one such
+setup. The only thing required is a way of specifying which DB backend to use,
+and that can be done in many ways.
