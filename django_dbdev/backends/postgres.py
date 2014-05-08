@@ -23,6 +23,7 @@ class PostgresBackend(BaseDbdevBackend):
         pg_ctl_executable = getattr(settings, 'DBDEV_POSTGRES_PG_CTL_EXECUTABLE', 'pg_ctl')
         psql_executable = getattr(settings, 'DBDEV_POSTGRES_PSQL_EXECUTABLE', 'psql')
         createdb_executable = getattr(settings, 'DBDEV_POSTGRES_CREATEDB_EXECUTABLE', 'createdb')
+        pg_dump_executable = getattr(settings, 'DBDEV_POSTGRES_PG_DUMP_EXECUTABLE', 'pg_dump')
         environ = {
             'PGPORT': str(DBSETTINGS['PORT'])
         }
@@ -40,6 +41,9 @@ class PostgresBackend(BaseDbdevBackend):
         self.psql = Command(psql_executable).bake(**common_command_kwargs)
         self.createdb = Command(createdb_executable).bake(
             '-e', **common_command_kwargs)
+        self.pg_dump = Command(pg_dump_executable).bake(
+            dbname=DBSETTINGS['NAME'],
+            **common_command_kwargs)
 
     def _create_user(self):
         self.psql('postgres', '-e', c="CREATE ROLE {USER} WITH PASSWORD '{PASSWORD}' SUPERUSER LOGIN;".format(**DBSETTINGS))
@@ -113,5 +117,10 @@ class PostgresBackend(BaseDbdevBackend):
     def load_dbdump(self, dumpfile):
         self.psql(DBSETTINGS['NAME'], f=dumpfile)
 
-    def backup(self):
-        self.get_backupname()
+    def backup(self, directory):
+        backupfile = os.path.join(directory, 'backup.sql')
+        self.pg_dump(f=backupfile)
+
+    def restore(self, directory):
+        backupfile = os.path.join(directory, 'backup.sql')
+        self.load_dbdump(backupfile)

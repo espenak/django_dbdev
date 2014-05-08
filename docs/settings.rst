@@ -49,3 +49,9 @@ Posgres backend settings
 
     Path to the ``createdb`` executable.
     Defaults to ``createdb``.
+
+
+.. data:: DBDEV_POSTGRES_PG_DUMP_EXECUTABLE
+
+    Path to the ``pg_dump`` executable.
+    Defaults to ``pg_dump``.

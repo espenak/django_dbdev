@@ -55,26 +55,30 @@ class BaseDbdevBackend(object):
         """
         raise NotImplementedError()
 
+    def backup(self, directory):
+        """
+        Create a backup of the database.
+
+        :param directory: The backup directory to create the backup in.
+        """
+        raise NotImplementedError()
+
+
+    def restore(self, directory):
+        """
+        Restore a backup created with :meth:`.backup.`
+
+        :param directory: The backup directory to restore.
+        """
+        raise NotImplementedError()
+
+
 
     #####################################################
     #
     # Helper methods
     #
     #####################################################
-
-    def backupdir(self):
-        """
-        Get the path to the backup directory for this database backend.
-        """
-        return os.path.join(self._root_datadir_path, self.dbengine)
-
-    def create_timestamped_backupdir(self):
-        """
-        Create a timestamped directory within :meth:`.backupdir`.
-
-        :return: The path to the created directory.
-        """
-        return datetime.now().strftime('%Y-%m-%d_%H-%M-%S-%f')
 
     @property
     def datadir(self):
@@ -124,3 +128,56 @@ class BaseDbdevBackend(object):
             self.stderr.write('An error of some sort')
         """
         return self.command.stderr
+
+
+    @property
+    def root_backupdir(self):
+        """
+        Get the path to the backup directory for this database backend.
+        """
+        return os.path.join(self._root_datadir_path, '{}-backups'.format(self.__class__.__name__))
+
+    def create_timestamped_backupdir(self, name=None):
+        """
+        Create a timestamped directory within :meth:`.root_backupdir`.
+
+        :return: The path to the created directory.
+        """
+        dirname = datetime.now().strftime('backup-%Y-%m-%d_%H-%M-%S-%f')
+        if name:
+            dirname = '{}.{}'.format(dirname, name)
+        dirpath = os.path.join(self.root_backupdir, dirname)
+        os.makedirs(dirpath)
+        return dirpath
+
+    def get_backupdirs(self):
+        if os.path.exists(self.root_backupdir):
+            return filter(lambda d: d.startswith('backup-'), os.listdir(self.root_backupdir))
+        else:
+            return []
+
+
+    def _get_backupdirs_sorted_descending(self):
+        backupdirs = self.get_backupdirs()
+        backupdirs.sort()
+        backupdirs.reverse()
+        backupdirs = [os.path.join(self.root_backupdir, backupdir) for backupdir in backupdirs]
+        return backupdirs
+
+    def get_last_backupdir(self):
+        return self._get_backupdirs_sorted_descending()[0]
+
+    def find_named_backupdir(self, name):
+        backupdirs = self.get_backupdirs()
+        suffix = '.{}'.format(name)
+        for directory in backupdirs:
+            if directory.endswith(suffix):
+                return os.path.join(self.root_backupdir, directory)
+        return None
+
+    def reinit(self):
+        """
+        Destroy and re-initialize.
+        """
+        self.destroy()
+        self.init()
