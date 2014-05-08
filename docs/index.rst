@@ -40,6 +40,15 @@ Help
 
 
 
+
+Source and issues
+=================
+For sources and issue tracker, see the `GitHub page for the project
+<https://github.com/espenak/django_dbdev>`_. If you plan to submit a patch,
+please read :doc:`develop`.
+
+
+
 Indices and tables
 ==================
 
