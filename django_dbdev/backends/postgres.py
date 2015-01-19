@@ -23,6 +23,7 @@ class PostgresBackend(BaseDbdevBackend):
         pg_ctl_executable = getattr(settings, 'DBDEV_POSTGRES_PG_CTL_EXECUTABLE', 'pg_ctl')
         psql_executable = getattr(settings, 'DBDEV_POSTGRES_PSQL_EXECUTABLE', 'psql')
         createdb_executable = getattr(settings, 'DBDEV_POSTGRES_CREATEDB_EXECUTABLE', 'createdb')
+        createdb_locale = getattr(settings, 'DBDEV_POSTGRES_CREATEDB_LOCALE', 'en_US.UTF-8')
         pg_dump_executable = getattr(settings, 'DBDEV_POSTGRES_PG_DUMP_EXECUTABLE', 'pg_dump')
         self.serverlogfile = os.path.join(self.datadir, 'serverlog.log')
         environ = {
@@ -46,7 +47,9 @@ class PostgresBackend(BaseDbdevBackend):
             **common_command_kwargs)
         self.createdb = Command(createdb_executable).bake(
             '-e',
-            encoding='utf-8', locale='en_US.utf8',
+            encoding='utf-8',
+            template='template0',
+            locale=createdb_locale,
             p=DBSETTINGS['PORT'],
             **common_command_kwargs)
         self.pg_dump = Command(pg_dump_executable).bake(
