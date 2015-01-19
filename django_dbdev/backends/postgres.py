@@ -46,6 +46,7 @@ class PostgresBackend(BaseDbdevBackend):
             **common_command_kwargs)
         self.createdb = Command(createdb_executable).bake(
             '-e',
+            encoding='utf-8', locale='en_US.utf8',
             p=DBSETTINGS['PORT'],
             **common_command_kwargs)
         self.pg_dump = Command(pg_dump_executable).bake(
