@@ -8,3 +8,11 @@ pip-log*
 docs/_build/
 dbdev_testproject/dbdev_tempdata/
 dist/
+
+# Ignore user-specific pycharm settings
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dataSources.ids
+.idea/dictionaries/
+.idea/dataSources.local.xml
+.idea/dataSources.xml
