@@ -1,3 +1,4 @@
+from builtins import object
 from datetime import datetime
 import os
 import importlib
@@ -189,7 +190,7 @@ class BaseDbdevBackend(object):
 
     def get_backupdirs(self):
         if os.path.exists(self.root_backupdir):
-            return filter(lambda d: d.startswith('backup-'), os.listdir(self.root_backupdir))
+            return [d for d in os.listdir(self.root_backupdir) if d.startswith('backup-')]
         else:
             return []
 

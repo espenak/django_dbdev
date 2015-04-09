@@ -1,3 +1,4 @@
+from builtins import str
 from sh import Command
 from sh import ErrorReturnCode
 import os.path
