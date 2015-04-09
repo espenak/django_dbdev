@@ -2,6 +2,7 @@ Session.vim
 .local.vimrc
 .DS_Store
 *.pyc
+__pycache__
 *~
 pip-log*
 *.egg-info/

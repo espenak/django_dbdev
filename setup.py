@@ -1,7 +1,11 @@
-from past.builtins import execfile
+import sys
 from setuptools import setup, find_packages
 
-execfile('django_dbdev/version.py')
+
+if sys.version_info[0] == 2:
+    execfile('django_dbdev/version.py')
+else:
+    exec(open('django_dbdev/version.py', 'rb').read())
 
 
 long_description = """
@@ -24,8 +28,7 @@ setup(
     packages=find_packages(exclude=['dbdev_testproject']),
     install_requires = [
         'Django',
-        'sh',
-        'future'
+        'sh'
     ],
     include_package_data=True,
     zip_safe=False,
