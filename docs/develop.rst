@@ -38,10 +38,6 @@ Navigate to the testproject::
 
     $ cd dbdev_testproject/
 
-Test with sqlite using::
-
-    $ python manage.py
-
 Test with postgres using::
 
     $ DJANGO_SETTINGS_MODULE=dbdev_testproject.develop.settings.postgres python manage.py

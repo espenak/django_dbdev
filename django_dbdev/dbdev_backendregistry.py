@@ -1,3 +1,4 @@
+from builtins import object
 from django_dbdev.backends.mysql import MySqlBackend
 from django_dbdev.backends.postgres import PostgresBackend
 

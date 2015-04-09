@@ -28,7 +28,8 @@ setup(
     packages=find_packages(exclude=['dbdev_testproject']),
     install_requires = [
         'Django',
-        'sh'
+        'sh',
+        'future'
     ],
     include_package_data=True,
     zip_safe=False,
