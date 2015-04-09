@@ -31,8 +31,8 @@ class PostgresBackend(BaseDbdevBackend):
             'PGPORT': str(DBSETTINGS['PORT'])
         }
         common_command_kwargs = dict(
-            _out=self.stdout,
-            _err=self.stderr,
+            _out=self.sh_stdout_handler,
+            _err=self.sh_stderr_handler,
             _env=environ,
             _out_bufsize=1)
         self.postgres = Command(postgres_executable).bake(

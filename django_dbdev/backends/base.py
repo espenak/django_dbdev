@@ -18,6 +18,13 @@ class BaseDbdevBackend(object):
         self.command = command
 
 
+    def sh_stdout_handler(self, data):
+        return self.stdout.write(data)
+
+    def sh_stderr_handler(self, data):
+        return self.stderr.write(data)
+
+
     #####################################################
     #
     # The API each backend needs to implement.

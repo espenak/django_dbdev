@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 if sys.version_info[0] == 2:
     execfile('django_dbdev/version.py')
 else:
-    exec(open('django_dbdev/version.py', 'rb').read())
+    exec(open('django_dbdev/version.py', 'r').read())
 
 
 long_description = """

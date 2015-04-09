@@ -31,8 +31,8 @@ class MySqlBackend(BaseDbdevBackend):
         mysqldump_executable = getattr(settings, 'DBDEV_MYSQLDUMP_EXECUTABLE', 'mysqldump')
         self.errorlogfile = os.path.join(self.datadir, 'servererror.log')
         self.common_command_kwargs = dict(
-            _out=self.stdout,
-            _err=self.stderr,
+            _out=self.sh_stdout_handler,
+            _err=self.sh_stderr_handler,
             _out_bufsize=1)
         self.mysqld = Command(mysqld_executable).bake(
             datadir=os.path.abspath(self.datadir),
