@@ -6,6 +6,20 @@ from shutil import rmtree
 from django.conf import settings
 from django.template.loader import render_to_string
 
+
+class DbSettingsDict(dict):
+    def __init__(self, staticsettings, lazy):
+        self.lazy = lazy
+        super(DbSettingsDict, self).__init__(**staticsettings)
+
+    def __getitem__(self, key):
+        if key in self.lazy:
+            setting, default = self.lazy[key]
+            return getattr(settings, setting, default)
+        else:
+            return super(DbSettingsDict, self).__getitem__(key)
+
+
 class BaseDbdevBackend(object):
     """
     Abstract base class for dbdev backends.
@@ -16,7 +30,6 @@ class BaseDbdevBackend(object):
         :param command: A Django management command class. Will always be a subclass of ``django_dbdev.management.commands._base.BaseDbdevCommand``.
         """
         self.command = command
-
 
     def sh_stdout_handler(self, data):
         return self.stdout.write(data)

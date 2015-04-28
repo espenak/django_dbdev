@@ -4,16 +4,17 @@ from sh import ErrorReturnCode
 import os.path
 from django.conf import settings
 
-from .base import BaseDbdevBackend
+from .base import BaseDbdevBackend, DbSettingsDict
 
-DBSETTINGS = {
-    'ENGINE':'django.db.backends.postgresql_psycopg2',
-    'PORT': getattr('DBDEV_POSTGRES_PORT', 20021),
+DBSETTINGS = DbSettingsDict({
+    'ENGINE': 'django.db.backends.postgresql_psycopg2',
     'NAME': 'dbdev',
     'USER': 'dbdev',
     'PASSWORD': 'dbdev',
     'HOST': '127.0.0.1',
-}
+}, lazy={
+    'PORT': ('DBDEV_POSTGRES_PORT', 20021)
+})
 
 
 class PostgresBackend(BaseDbdevBackend):

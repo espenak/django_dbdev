@@ -7,17 +7,18 @@ from sh import Command
 from sh import ErrorReturnCode
 from django.conf import settings
 
-from .base import BaseDbdevBackend
+from .base import BaseDbdevBackend, DbSettingsDict
 
 
-DBSETTINGS = {
-    'ENGINE':'django.db.backends.mysql',
-    'PORT': getattr('DBDEV_MYSQL_PORT', 20022),
+DBSETTINGS = DbSettingsDict({
+    'ENGINE': 'django.db.backends.mysql',
     'NAME': 'dbdev',
     'USER': 'root',
     'PASSWORD': 'dbdev',
     'HOST': '127.0.0.1',
-}
+}, lazy={
+    'PORT': ('DBDEV_MYSQL_PORT', 20022),
+})
 
 
 class MySqlBackend(BaseDbdevBackend):
