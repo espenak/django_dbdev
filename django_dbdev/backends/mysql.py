@@ -12,7 +12,7 @@ from .base import BaseDbdevBackend
 
 DBSETTINGS = {
     'ENGINE':'django.db.backends.mysql',
-    'PORT': 20022,
+    'PORT': getattr('DBDEV_MYSQL_PORT', 20022),
     'NAME': 'dbdev',
     'USER': 'root',
     'PASSWORD': 'dbdev',

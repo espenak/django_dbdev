@@ -8,7 +8,7 @@ from .base import BaseDbdevBackend
 
 DBSETTINGS = {
     'ENGINE':'django.db.backends.postgresql_psycopg2',
-    'PORT': 20021,
+    'PORT': getattr('DBDEV_POSTGRES_PORT', 20021),
     'NAME': 'dbdev',
     'USER': 'dbdev',
     'PASSWORD': 'dbdev',
