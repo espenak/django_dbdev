@@ -4,18 +4,16 @@ from sh import ErrorReturnCode
 import os.path
 from django.conf import settings
 
-from .base import BaseDbdevBackend, DbSettingsDict
+from .base import BaseDbdevBackend
 
-DBSETTINGS = DbSettingsDict({
+DBSETTINGS = {
     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    'PORT': 20021,
     'NAME': 'dbdev',
     'USER': 'dbdev',
     'PASSWORD': 'dbdev',
     'HOST': '127.0.0.1',
-}, lazy={
-    'PORT': ('DBDEV_POSTGRES_PORT', 20021)
-})
-
+}
 
 class PostgresBackend(BaseDbdevBackend):
 
@@ -29,7 +27,7 @@ class PostgresBackend(BaseDbdevBackend):
         pg_dump_executable = getattr(settings, 'DBDEV_POSTGRES_PG_DUMP_EXECUTABLE', 'pg_dump')
         self.serverlogfile = os.path.join(self.datadir, 'serverlog.log')
         environ = {
-            'PGPORT': str(DBSETTINGS['PORT'])
+            'PGPORT': str(self.dbsettings['PORT'])
         }
         common_command_kwargs = dict(
             _out=self.sh_stdout_handler,
@@ -37,7 +35,7 @@ class PostgresBackend(BaseDbdevBackend):
             _env=environ,
             _out_bufsize=1)
         self.postgres = Command(postgres_executable).bake(
-            p=DBSETTINGS['PORT'],
+            p=self.dbsettings['PORT'],
             **common_command_kwargs)
         self.pg_ctl = Command(pg_ctl_executable).bake(
             '-w',
@@ -45,25 +43,25 @@ class PostgresBackend(BaseDbdevBackend):
             D=self.datadir,
             **common_command_kwargs)
         self.psql = Command(psql_executable).bake(
-            p=DBSETTINGS['PORT'],
+            p=self.dbsettings['PORT'],
             **common_command_kwargs)
         self.createdb = Command(createdb_executable).bake(
             '-e',
             encoding='utf-8',
             template='template0',
             locale=createdb_locale,
-            p=DBSETTINGS['PORT'],
+            p=self.dbsettings['PORT'],
             **common_command_kwargs)
         self.pg_dump = Command(pg_dump_executable).bake(
-            p=DBSETTINGS['PORT'],
-            dbname=DBSETTINGS['NAME'],
+            p=self.dbsettings['PORT'],
+            dbname=self.dbsettings['NAME'],
             **common_command_kwargs)
 
     def _create_user(self):
         self.psql('postgres', '-e', c="CREATE ROLE {USER} WITH PASSWORD '{PASSWORD}' SUPERUSER LOGIN;".format(**DBSETTINGS))
 
     def _create_database(self):
-        self.createdb(DBSETTINGS['NAME'], owner=DBSETTINGS['USER'])
+        self.createdb(self.dbsettings['NAME'], owner=self.dbsettings['USER'])
 
     def init(self):
         if os.path.exists(self.datadir):
@@ -133,7 +131,7 @@ class PostgresBackend(BaseDbdevBackend):
             pass # The error message from postgres is shown to the user, so no more is needed from us
 
     def load_dbdump(self, dumpfile):
-        self.psql(DBSETTINGS['NAME'], f=dumpfile)
+        self.psql(self.dbsettings['NAME'], f=dumpfile)
 
     def backup(self, directory):
         backupfile = os.path.join(directory, 'backup.sql')

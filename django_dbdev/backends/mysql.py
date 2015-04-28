@@ -7,18 +7,17 @@ from sh import Command
 from sh import ErrorReturnCode
 from django.conf import settings
 
-from .base import BaseDbdevBackend, DbSettingsDict
+from .base import BaseDbdevBackend
 
 
-DBSETTINGS = DbSettingsDict({
+DBSETTINGS = {
     'ENGINE': 'django.db.backends.mysql',
+    'PORT': 20022,
     'NAME': 'dbdev',
     'USER': 'root',
     'PASSWORD': 'dbdev',
     'HOST': '127.0.0.1',
-}, lazy={
-    'PORT': ('DBDEV_MYSQL_PORT', 20022),
-})
+}
 
 
 class MySqlBackend(BaseDbdevBackend):
@@ -37,27 +36,27 @@ class MySqlBackend(BaseDbdevBackend):
             _out_bufsize=1)
         self.mysqld = Command(mysqld_executable).bake(
             datadir=os.path.abspath(self.datadir),
-            port=DBSETTINGS['PORT'],
+            port=self.dbsettings['PORT'],
             log_error=os.path.abspath(self.errorlogfile),
             **self.common_command_kwargs)
         self.mysqladmin = Command(mysqladmin_executable).bake(
-            port=DBSETTINGS['PORT'],
-            user=DBSETTINGS['USER'],
-            password=DBSETTINGS['PASSWORD'],
+            port=self.dbsettings['PORT'],
+            user=self.dbsettings['USER'],
+            password=self.dbsettings['PASSWORD'],
             **self.common_command_kwargs)
         self.mysqladmin_nopassword = Command(mysqladmin_executable).bake(
-            port=DBSETTINGS['PORT'],
-            user=DBSETTINGS['USER'],
+            port=self.dbsettings['PORT'],
+            user=self.dbsettings['USER'],
             **self.common_command_kwargs)
         self.mysql = Command(mysql_executable).bake(
-            port=DBSETTINGS['PORT'],
-            user=DBSETTINGS['USER'],
-            password=DBSETTINGS['PASSWORD'],
+            port=self.dbsettings['PORT'],
+            user=self.dbsettings['USER'],
+            password=self.dbsettings['PASSWORD'],
             **self.common_command_kwargs)
         self.mysqldump = Command(mysqldump_executable).bake(
-            port=DBSETTINGS['PORT'],
-            user=DBSETTINGS['USER'],
-            password=DBSETTINGS['PASSWORD'],
+            port=self.dbsettings['PORT'],
+            user=self.dbsettings['USER'],
+            password=self.dbsettings['PASSWORD'],
             **self.common_command_kwargs)
 
         self.mysql_basedir = os.environ.get('DBDEV_MYSQL_BASEDIR',
@@ -130,11 +129,11 @@ class MySqlBackend(BaseDbdevBackend):
     def _set_password_for_rootuser(self):
         self.stdout.write('Setting MySQL server password for the root user to: "{PASSWORD}".'.format(
             **DBSETTINGS))
-        self.mysqladmin_nopassword('password', DBSETTINGS['PASSWORD'])
+        self.mysqladmin_nopassword('password', self.dbsettings['PASSWORD'])
 
     def _create_database(self):
         self.stdout.write('Creating the "{NAME}"-database.'.format(**DBSETTINGS))
-        self.mysqladmin('create', DBSETTINGS['NAME'])
+        self.mysqladmin('create', self.dbsettings['NAME'])
 
     def init(self):
         if os.path.exists(self.datadir):
@@ -183,12 +182,12 @@ class MySqlBackend(BaseDbdevBackend):
 
     def load_dbdump(self, dumpfile):
         with open(dumpfile, 'rb') as f:
-            self.mysql(DBSETTINGS['NAME'], _in=f)
+            self.mysql(self.dbsettings['NAME'], _in=f)
 
     def backup(self, directory):
         backupfile = os.path.join(directory, 'backup.sql')
         with open(backupfile, 'wb') as f:
-            self.mysqldump(DBSETTINGS['NAME'], _out=f)
+            self.mysqldump(self.dbsettings['NAME'], _out=f)
 
     def restore(self, directory):
         backupfile = os.path.join(directory, 'backup.sql')

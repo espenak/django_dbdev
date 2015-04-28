@@ -56,10 +56,6 @@ Posgres backend settings
     Path to the ``pg_dump`` executable.
     Defaults to ``pg_dump``.
 
-.. data:: DBDEV_POSTGRES_PORT
-
-    The port to bind the postgres server to. Defaults to ``20021``.
-
 
 **********************
 MySQL backend settings
@@ -99,7 +95,3 @@ MySQL backend settings
     choice for projects with more than one developer.
 
     Defaults to ``None``.
-
-.. data:: DBDEV_MYSQL_PORT
-
-    The port to bind the mysql server to. Defaults to ``20022``.
