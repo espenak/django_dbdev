@@ -3,7 +3,6 @@ from django_dbdev.backends.mysql import MySqlBackend
 from django_dbdev.backends.postgres import PostgresBackend
 
 
-
 class DbdevBackendRegistry(object):
     def __init__(self):
         self.backends = {}
@@ -13,6 +12,7 @@ class DbdevBackendRegistry(object):
 
 
 backendregistry = DbdevBackendRegistry()
+
 
 def register(dbengine, backendclass):
     """
