@@ -1,8 +1,9 @@
-from builtins import object
 from datetime import datetime
 import os
 import importlib
 from shutil import rmtree
+
+from builtins import object
 from django.conf import settings
 from django.template.loader import render_to_string
 
@@ -27,7 +28,6 @@ class BaseDbdevBackend(object):
 
     def sh_stderr_handler(self, data):
         return self.stderr.write(data)
-
 
     #####################################################
     #
@@ -80,7 +80,6 @@ class BaseDbdevBackend(object):
         """
         raise NotImplementedError()
 
-
     def restore(self, directory):
         """
         Restore a backup created with :meth:`.backup.`
@@ -96,7 +95,6 @@ class BaseDbdevBackend(object):
         Must at least tell if the server is running or not.
         """
         raise NotImplementedError()
-
 
     def guide(self):
         """
@@ -120,7 +118,6 @@ class BaseDbdevBackend(object):
             'backend': self,
             'dbsettings': importlib.import_module(self.__class__.__module__).DBSETTINGS
         })
-
 
     #####################################################
     #
@@ -155,7 +152,6 @@ class BaseDbdevBackend(object):
         """
         rmtree(self.datadir)
 
-
     @property
     def stdout(self):
         """
@@ -177,7 +173,6 @@ class BaseDbdevBackend(object):
             self.stderr.write('An error of some sort')
         """
         return self.command.stderr
-
 
     @property
     def root_backupdir(self):
@@ -204,7 +199,6 @@ class BaseDbdevBackend(object):
             return [d for d in os.listdir(self.root_backupdir) if d.startswith('backup-')]
         else:
             return []
-
 
     def _get_backupdirs_sorted_descending(self):
         backupdirs = self.get_backupdirs()

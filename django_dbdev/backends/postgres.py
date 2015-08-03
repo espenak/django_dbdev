@@ -1,7 +1,8 @@
+import os.path
+
 from builtins import str
 from sh import Command
 from sh import ErrorReturnCode
-import os.path
 from django.conf import settings
 
 from .base import BaseDbdevBackend
@@ -15,8 +16,8 @@ DBSETTINGS = {
     'HOST': '127.0.0.1',
 }
 
-class PostgresBackend(BaseDbdevBackend):
 
+class PostgresBackend(BaseDbdevBackend):
     def __init__(self, command):
         super(PostgresBackend, self).__init__(command)
         postgres_executable = getattr(settings, 'DBDEV_POSTGRES_EXECUTABLE', 'postgres')
@@ -58,7 +59,8 @@ class PostgresBackend(BaseDbdevBackend):
             **common_command_kwargs)
 
     def _create_user(self):
-        self.psql('postgres', '-e', c="CREATE ROLE {USER} WITH PASSWORD '{PASSWORD}' SUPERUSER LOGIN;".format(**DBSETTINGS))
+        self.psql('postgres', '-e',
+                  c="CREATE ROLE {USER} WITH PASSWORD '{PASSWORD}' SUPERUSER LOGIN;".format(**DBSETTINGS))
 
     def _create_database(self):
         self.createdb(self.dbsettings['NAME'], owner=self.dbsettings['USER'])
@@ -75,7 +77,7 @@ class PostgresBackend(BaseDbdevBackend):
             self._create_database()
 
             self.stdout.write('')
-            self.stdout.write('='*70)
+            self.stdout.write('=' * 70)
             self.stdout.write('')
             self.stdout.write('Successfully:')
             self.stdout.write('- Initialized postgres in "{}".'.format(self.datadir))
@@ -92,7 +94,7 @@ class PostgresBackend(BaseDbdevBackend):
             self.stdout.write('')
             self.stdout.write('  $ python manage.py dbdev_destroy')
             self.stdout.write('')
-            self.stdout.write('='*70)
+            self.stdout.write('=' * 70)
 
     def destroy(self):
         self.stop_database_server()
@@ -101,8 +103,8 @@ class PostgresBackend(BaseDbdevBackend):
             self.stdout.write('Successfully stopped the Postgres server and removed "{}".'.format(
                 self.datadir))
 
-    # def _server_is_running(self):
-        # return os.path.exists(os.path.join(self.datadir, 'postmaster.pid'))
+            # def _server_is_running(self):
+            # return os.path.exists(os.path.join(self.datadir, 'postmaster.pid'))
 
     @property
     def _server_logfile(self):
@@ -128,7 +130,7 @@ class PostgresBackend(BaseDbdevBackend):
         try:
             self._stop_database_server()
         except ErrorReturnCode:
-            pass # The error message from postgres is shown to the user, so no more is needed from us
+            pass  # The error message from postgres is shown to the user, so no more is needed from us
 
     def load_dbdump(self, dumpfile):
         self.psql(self.dbsettings['NAME'], f=dumpfile)
