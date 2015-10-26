@@ -56,6 +56,7 @@ class PostgresBackend(BaseDbdevBackend):
         self.pg_dump = Command(pg_dump_executable).bake(
             p=self.dbsettings['PORT'],
             dbname=self.dbsettings['NAME'],
+            no_privileges=True,
             **common_command_kwargs)
 
     def _create_user(self):
@@ -134,6 +135,9 @@ class PostgresBackend(BaseDbdevBackend):
 
     def load_dbdump(self, dumpfile):
         self.psql(self.dbsettings['NAME'], f=dumpfile)
+
+    def create_dbdump(self, dumpfile):
+        self.pg_dump(f=dumpfile)
 
     def backup(self, directory):
         backupfile = os.path.join(directory, 'backup.sql')
