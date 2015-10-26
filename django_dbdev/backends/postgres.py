@@ -137,12 +137,12 @@ class PostgresBackend(BaseDbdevBackend):
         self.psql(self.dbsettings['NAME'], f=dumpfile)
 
     def create_dbdump(self, dumpfile):
-        args = ['-f', dumpfile, '-a', '--column-inserts']
+        #args = ['-f', dumpfile, '-a', '--column-inserts']
         #for tablename in exclude:
             #args.append('--exclude-table-data={}'.format(tablename))
             #args.append('--exclude-table={}'.format(tablename))
             #args.append('--exclude-schema={}'.format(tablename))
-        self.pg_dump(*args)
+        self.pg_dump(f=dumpfile)
 
     def backup(self, directory):
         backupfile = os.path.join(directory, 'backup.sql')
