@@ -7,12 +7,16 @@ from django_dbdev.dbdev_backendregistry import backendregistry
 
 
 class BaseDbdevCommand(BaseCommand):
-    option_list = BaseCommand.option_list + (
-        make_option('--database',
-            dest='database',
-            default='default',
-            help='Nominates a database to work with. Defaults to "default" database.'),
-        )
+    def add_arguments(self, parser):
+        parser.add_argument('--database', dest='database',
+                            default='default',
+                            help='Nominates a database to work with. Defaults to "default" database.')
+        self.add_extra_arguments(parser)
+
+    def add_extra_arguments(self, parser):
+        """
+        Subclasses can add extra arguments here.
+        """
 
     def handle(self, *args, **options):
         self.args = args

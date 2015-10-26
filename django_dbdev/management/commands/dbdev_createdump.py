@@ -3,11 +3,15 @@ from ._base import BaseDbdevCommand
 
 class Command(BaseDbdevCommand):
     help = 'Create a database dump.'
-    args = '<dumpfile>'
+
+    def add_extra_arguments(self, parser):
+        parser.add_argument('dumpfile')
+        #parser.add_argument(
+                #'--exclude', dest='exclude',
+                #nargs='*',
+                #help='Exclude the given table. Example: "--exclude tableA tableB tableC".')
 
     def dbdev_handle(self):
-        if len(self.args) != 1:
-            self.stderr.write('Dumpfile is required. See --help.')
-            raise SystemExit()
-        dumpfile = self.args[0]
+        dumpfile = self.options['dumpfile']
+        #exclude = self.options['exclude']
         self.dbdev_backend.create_dbdump(dumpfile)
