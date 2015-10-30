@@ -5,13 +5,16 @@ from ._base import BaseDbdevCommand
 
 class Command(BaseDbdevCommand):
     help = 'Backup the database.'
-    
-    option_list = BaseDbdevCommand.option_list + (
-        make_option('-n', '--name',
+
+    def add_extra_arguments(self, parser):
+        """
+        Subclasses can add extra arguments here.
+        """
+        parser.add_argument(
+            '-n', '--name',
             dest='backupname',
             default=None,
-            help='Name the backup. Can be restored with "dbdev_restore -n <name>"'),
-        )
+            help='Name the backup. Can be restored with "dbdev_restore -n <name>"')
 
     def dbdev_handle(self):
         backupname = self.options['backupname']

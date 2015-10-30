@@ -8,13 +8,15 @@ class Command(BaseDbdevCommand):
     help = 'Restore backup created with dbdev_backup.'
     args = '[backup-directory]'
 
-    option_list = BaseDbdevCommand.option_list + (
-        make_option('-n', '--name',
+    def add_extra_arguments(self, parser):
+        """
+        Subclasses can add extra arguments here.
+        """
+        parser.add_argument(
+            '-n', '--name',
             dest='backupname',
             default=None,
             help='Name of backup to restore if a backup was created with "dbdev_backup -n <name>".'),
-        )
-
 
     def dbdev_handle(self):
         if len(self.args) == 0:
