@@ -1,3 +1,5 @@
+from django.core.management import call_command
+
 from ._base import BaseDbdevCommand
 
 

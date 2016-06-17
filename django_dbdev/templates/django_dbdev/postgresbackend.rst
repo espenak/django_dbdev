@@ -19,5 +19,18 @@ Load a database dump (just like the dbdev_loaddump management command)::
 
 
 .. note::
-    You do not need any login info because we created and run the server
+    You do not need any login info because we create and run the server
     as your local user.
+
+
+Importing heroku backups
+========================
+
+Create a backup::
+
+    $ curl -o latest.dump `heroku pg:backups public-url --app myapp`
+
+Load the backup into your dbdev database::
+
+    $ python manage.py dbdev_reinit
+    $ python manage.py dbdev_loaddump latest.dump

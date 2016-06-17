@@ -26,6 +26,7 @@ class PostgresBackend(BaseDbdevBackend):
         createdb_executable = getattr(settings, 'DBDEV_POSTGRES_CREATEDB_EXECUTABLE', 'createdb')
         createdb_locale = getattr(settings, 'DBDEV_POSTGRES_CREATEDB_LOCALE', 'en_US.UTF-8')
         pg_dump_executable = getattr(settings, 'DBDEV_POSTGRES_PG_DUMP_EXECUTABLE', 'pg_dump')
+        pg_restore_executable = getattr(settings, 'DBDEV_POSTGRES_PG_RESTORE_EXECUTABLE', 'pg_restore')
         self.serverlogfile = os.path.join(self.datadir, 'serverlog.log')
         environ = {
             'PGPORT': str(self.dbsettings['PORT'])
@@ -57,6 +58,13 @@ class PostgresBackend(BaseDbdevBackend):
             p=self.dbsettings['PORT'],
             dbname=self.dbsettings['NAME'],
             no_privileges=True,
+            **common_command_kwargs)
+        self.pg_restore = Command(pg_restore_executable).bake(
+            p=self.dbsettings['PORT'],
+            dbname=self.dbsettings['NAME'],
+            no_privileges=True,
+            no_acl=True,
+            no_owner=True,
             **common_command_kwargs)
 
     def _create_user(self):
@@ -134,7 +142,10 @@ class PostgresBackend(BaseDbdevBackend):
             pass  # The error message from postgres is shown to the user, so no more is needed from us
 
     def load_dbdump(self, dumpfile):
-        self.psql(self.dbsettings['NAME'], f=dumpfile)
+        if dumpfile.endswith('.dump'):
+            print(self.pg_restore(dumpfile))
+        else:
+            self.psql(self.dbsettings['NAME'], f=dumpfile)
 
     def create_dbdump(self, dumpfile):
         #args = ['-f', dumpfile, '-a', '--column-inserts']

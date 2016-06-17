@@ -125,7 +125,6 @@ class BaseDbdevBackend(object):
     #
     #####################################################
 
-
     @property
     def datadir(self):
         """
